@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+
+  --color-brand-pink: #E8C9C7;
+  --color-brand-cream: #F7F1E8;
+  --color-brand-beige: #D8BCA5;
+  --color-brand-cocoa: #795B4B;
+  --color-brand-blueAccent: #B0CBE9;
+  --color-brand-blueDark: #4A6FA5;
+  --color-brand-pinkDark: #C89B99;
+  --color-brand-beigeDark: #C4A58D;
+}
+
+body {
+  background-color: #F7F1E8;
+  color: #795B4B;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.balanced-photo {
+  filter: brightness(1.02) contrast(1.01);
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+input, select, textarea {
+  accent-color: #E8C9C7;
+}

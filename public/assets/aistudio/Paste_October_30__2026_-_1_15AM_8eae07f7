@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Little Fête & Co. — Your Little Party, Your Way</title>
+  
+  <!-- Font Tipografi Estetik -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & React 18 Standalone -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Konfigurasi Palet Warna Resmi -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              pink: '#E8C9C7',        // Core Blush Pink
+              cream: '#F7F1E8',       // Core Soft Cream
+              beige: '#D8BCA5',       // Core Warm Beige
+              cocoa: '#795B4B',       // Core Cocoa Brown
+              blueAccent: '#B0CBE9',  // Page-Specific Pastel Blue
+              blueDark: '#4A6FA5',
+              pinkDark: '#C89B99',
+              beigeDark: '#C4A58D'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F7F1E8;
+      color: #795B4B;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .balanced-photo {
+      filter: brightness(1.02) contrast(1.01);
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    input, select, textarea {
+      accent-color: #E8C9C7;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // =========================================================================
+    // 1. DATA AWAL, KATALOG RESMI & 3 STAF OPERASIONAL
+    // =========================================================================
+    const OFFICIAL_TEAM = [
+      { id: 'tm_dina', name: 'Dina Alawiyah', email: 'dina@littlefeat.id', role: 'team' },
+      { id: 'tm_kirana', name: 'Kirana Larasati', email: 'kirana@littlefeat.id', role: 'team' },
+      { id: 'tm_fifi', name: 'Fifi Feliana', email: 'fifi@littlefeat.id', role: 'team' }
+    ];
+
+    // 4 Foto Dekorasi Asli (Container non-destruktif dengan pencahayaan seimbang)
+    const INITIAL_DECORATION_THEMES = [
+      {
+        id: 'sweet_pink',
+        name: 'Sweet Pink',
+        description: 'Paduan warna blush pink, putih krem, dan sentuhan peach yang manis, hangat, dan fotogenik.',
+        palette: ['#E8C9C7', '#FFFFFF', '#F5D7C9'],
+        imageUrl: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=85'
+      },
+      {
+        id: 'little_blue',
+        name: 'Little Blue',
+        description: 'Sentuhan biru pastel yang menyejukkan hati berpadu dengan aksen putih bersih dan awan lembut.',
+        palette: ['#B0CBE9', '#FFFFFF', '#DCE8F7'],
+        imageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=85'
+      },
+      {
+        id: 'sage_garden',
+        name: 'Sage Garden',
+        description: 'Harmoni natural elegan dengan dominasi hijau sage lembut, ivory, dan sentuhan dedaunan estetik.',
+        palette: ['#9CAF88', '#F7F1E8', '#DFE6D8'],
+        imageUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=85'
+      },
+      {
+        id: 'sweet_cream',
+        name: 'Sweet Cream',
+        description: 'Palet abadi nan hangat dengan kombinasi soft cream murni, warm beige, dan aksen cokelat muda lembut.',
+        palette: ['#F7F1E8', '#FFFFFF', '#D8BCA5'],
+        imageUrl: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&q=85'
+      }
+    ];
+
+    // 3 Foto Kue Asli (Masing-masing untuk 3 produk kue rekanan)
+    const INITIAL_CAKES = [
+      {
+        id: 'cake_classic',
+        name: 'Sweet Classic',
+        startingPrice: 100000,
+        description: 'Kue bolu lembut dengan hiasan buttercream minimalis manis nan rapi.',
+        imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=85'
+      },
+      {
+        id: 'cake_character',
+        name: 'Little Character',
+        startingPrice: 150000,
+        description: 'Kue bertema dengan hiasan karakter lucu kesukaan si kecil.',
+        imageUrl: 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=800&q=85'
+      },
+      {
+        id: 'cake_double',
+        name: 'Double Delight',
+        startingPrice: 350000,
+        description: 'Kue 2 tingkat estetik untuk perayaan pesta ulang tahun yang lebih meriah.',
+        imageUrl: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&w=800&q=85'
+      }
+    ];
+
+    const INITIAL_PACKAGES = [
+      {
+        id: 'little_moments',
+        name: 'Little Moments',
+        price: 399000,
+        capacity: 15,
+        durationHours: 2,
+        includes: [
+          'Standar dekorasi sweet arched backdrop nude/beige',
+          'Balon organik 20–30 pcs di satu sisi lengkungan',
+          'Balon foil angka penanda usia & nama si kecil',
+          'Meja kue minimalis & taplak meja senada',
+          'MC profesional ramah anak',
+          'Permainan interaktif (interactive games)',
+          'Susunan acara (rundown) terstruktur'
+        ]
+      },
+      {
+        id: 'happy_days',
+        name: 'Happy Days',
+        price: 699000,
+        capacity: 30,
+        durationHours: 2,
+        includes: [
+          'Standar dekorasi sweet arched backdrop nude/beige',
+          'Balon organik 20–30 pcs di satu sisi lengkungan',
+          'Balon foil angka penanda usia & nama si kecil',
+          'Meja kue minimalis & taplak meja senada',
+          'MC profesional ramah anak',
+          'Permainan interaktif (interactive games)',
+          'Susunan acara (rundown) terstruktur'
+        ]
+      },
+      {
+        id: 'dream_party',
+        name: 'Dream Party',
+        price: 1099000,
+        capacity: 50,
+        durationHours: 2,
+        includes: [
+          'Standar dekorasi sweet arched backdrop nude/beige',
+          'Balon organik 20–30 pcs di satu sisi lengkungan',
+          'Balon foil angka penanda usia & nama si kecil',
+          'Meja kue minimalis & taplak meja senada',
+          'MC profesional ramah anak',
+          'Permainan interaktif (interactive games)',
+          'Susunan acara (rundown) terstruktur'
+        ]
+      }
+    ];
+
+    function formatRupiah(num) {
+      return 'Rp' + Number(num || 0).toLocaleString('id-ID');
+    }
+
+    function calculateTransport(distanceKm) {
+      if (distanceKm <= 5) return { fee: 0, isConfirmed: true, label: 'Rp0 (0–5 km Bebas Biaya)' };
+      if (distanceKm <= 10) return { fee: 15000, isConfirmed: true, label: 'Rp15.000 (>5–10 km)' };
+      if (distanceKm <= 15) return { fee: 25000, isConfirmed: true, label: 'Rp25.000 (>10–15 km)' };
+      return { fee: 0, isConfirmed: false, label: 'Menunggu Konfirmasi Tim (>15 km)' };
+    }
+
+    // Penugasan PIC berimbang (Dina, Kirana, atau Fifi)
+    function assignBalancedPIC(existingBookings) {
+      const counts = { 'Dina Alawiyah': 0, 'Kirana Larasati': 0, 'Fifi Feliana': 0 };
+      existingBookings.forEach(b => {
+        if (b.assignedPIC && counts[b.assignedPIC] !== undefined) {
+          counts[b.assignedPIC]++;
+        }
+      });
+      let selected = 'Dina Alawiyah';
+      let minVal = Infinity;
+      OFFICIAL_TEAM.forEach(tm => {
+        if (counts[tm.name] < minVal) {
+          minVal = counts[tm.name];
+          selected = tm.name;
+        }
+      });
+      return selected;
+    }
+
+    // =========================================================================
+    // 2. APLIKASI UTAMA
+    // =========================================================================
+    function App() {
+      const [page, setPage] = useState('home');
+      const [viewingRef, setViewingRef] = useState('');
+
+      // State Pesanan (Tersimpan di LocalStorage)
+      const [bookings, setBookings] = useState(() => {
+        const saved = localStorage.getItem('lf_bookings_v3');
+        return saved ? JSON.parse(saved) : [
+          {
+            id: 'bk_1',
+            referenceCode: 'LF-2026-1024',
+            customerName: 'Bunda Sarah',
+            customerEmail: 'sarah@example.com',
+            customerWhatsapp: '081299998888',
+            preferredContact: 'whatsapp',
+            childName: 'Kimberly',
+            childAge: 3,
+            childBirthdate: '2023-11-04',
+            eventDate: '2026-11-08',
+            eventStartTime: '15:00',
+            guestCount: 20,
+            specialRequests: 'Dekorasi di area teras semi-outdoor.',
+            venueName: 'Kediaman Pribadi',
+            venueAddress: 'Jl. Melati No. 12, Gandaria',
+            cityOrDistrict: 'Jakarta Selatan',
+            distanceKm: 4,
+            transportFee: 0,
+            isTransportConfirmed: true,
+            packageName: 'Little Moments',
+            packagePrice: 399000,
+            themeName: 'Sweet Pink',
+            additionalChildrenCount: 5,
+            additionalChildrenFee: 150000,
+            additionalDurationMinutes: 0,
+            additionalDurationFee: 0,
+            addons: [
+              { name: 'Cake: Sweet Classic', subtotal: 100000, isStartingPrice: true, isConfirmed: false },
+              { name: 'Lilin Angka (1 Buah)', subtotal: 10000, isStartingPrice: false, isConfirmed: true }
+            ],
+            confirmedTotal: 559000,
+            estimatedTotal: 659000,
+            hasUnconfirmedItems: true,
+            bookingStatus: 'Menunggu Konfirmasi',
+            paymentStatus: 'Belum Dibayar',
+            marketingConsent: true,
+            assignedPIC: 'Dina Alawiyah',
+            createdAt: '2026-10-25T10:00:00Z'
+          }
+        ];
+      });
+
+      // Jurnal Keuangan Sesuai Prinsip Akuntansi
+      const [journalEntries, setJournalEntries] = useState(() => {
+        const saved = localStorage.getItem('lf_journal_v3');
+        return saved ? JSON.parse(saved) : [
+          {
+            id: 'tx_1',
+            date: '2026-10-01',
+            type: 'MODAL',
+            category: 'Modal & Utang',
+            description: 'Penyetoran modal awal pendiri Little Fête & Co.',
+            amount: 15000000,
+            recordedBy: 'Dina Alawiyah'
+          },
+          {
+            id: 'tx_2',
+            date: '2026-10-05',
+            type: 'ASET_PERALATAN',
+            category: 'Pembelian Peralatan',
+            description: 'Pembelian 2 unit Portable Arched Backdrop Nude & Meja Kue',
+            amount: 3200000,
+            recordedBy: 'Kirana Larasati'
+          },
+          {
+            id: 'tx_3',
+            date: '2026-10-12',
+            type: 'BEBAN',
+            category: 'Beban Operasional',
+            description: 'Bahan balon pastel latex 500 pcs & perekat',
+            amount: 280000,
+            recordedBy: 'Fifi Feliana'
+          },
+          {
+            id: 'tx_4',
+            date: '2026-10-25',
+            type: 'PENDAPATAN',
+            category: 'Pendapatan',
+            description: 'Pendapatan Paket Pesta Acara LF-2026-1024',
+            amount: 559000,
+            bookingRef: 'LF-2026-1024',
+            recordedBy: 'Dina Alawiyah'
+          }
+        ];
+      });
+
+      // State Tugas & Sesi
+      const [tasks, setTasks] = useState(() => {
+        const saved = localStorage.getItem('lf_tasks_v3');
+        return saved ? JSON.parse(saved) : [
+          { id: 'tsk_1', title: 'Konfirmasi desain kue ke vendor rekanan', bookingRef: 'LF-2026-1024', assignedTo: 'Kirana', status: 'Sedang Dikerjakan' },
+          { id: 'tsk_2', title: 'Siapkan backdrop & balon tema Sweet Pink', bookingRef: 'LF-2026-1024', assignedTo: 'Dina', status: 'Belum Dikerjakan' }
+        ];
+      });
+
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem('lf_user_session_v3');
+        return saved ? JSON.parse(saved) : null;
+      });
+
+      useEffect(() => {
+        localStorage.setItem('lf_bookings_v3', JSON.stringify(bookings));
+      }, [bookings]);
+
+      useEffect(() => {
+        localStorage.setItem('lf_journal_v3', JSON.stringify(journalEntries));
+      }, [journalEntries]);
+
+      useEffect(() => {
+        localStorage.setItem('lf_tasks_v3', JSON.stringify(tasks));
+      }, [tasks]);
+
+      const handleLogout = () => {
+        setCurrentUser(null);
+        localStorage.removeItem('lf_user_session_v3');
+        setPage('home');
+      };
+
+      // Styling Dinamis Latar & Aksen Per Halaman
+      const getPageThemeClasses = () => {
+        switch (page) {
+          case 'home':
+            return 'bg-[#F7F1E8]';
+          case 'packages':
+            return 'bg-[#FAF4EC]';
+          case 'themes':
+            return 'bg-[#F4F7FB]'; // Sentuhan Pastel Blue halus
+          case 'addons':
+            return 'bg-[#F8F2ED]';
+          case 'status':
+            return 'bg-[#F3F7FA]';
+          case 'team_portal':
+            return 'bg-[#F6F0E6]';
+          default:
+            return 'bg-[#F7F1E8]';
+        }
+      };
+
+      return (
+        <div className={`min-h-screen flex flex-col justify-between ${getPageThemeClasses()} transition-colors duration-200`}>
+          {/* Top Announcement Ribbon */}
+          <div className="bg-[#EFE7DC] border-b border-[#E3D7C8] text-[11px] py-1.5 px-4 text-center tracking-wide text-brand-cocoa font-medium">
+            ✨ Little Fête & Co. — Your Little Party, Your Way. Spesialis Pesta Ulang Tahun Anak Usia 0–12 Tahun.
+          </div>
+
+          {/* Navigation Bar */}
+          <header className="sticky top-0 z-50 bg-[#F7F1E8]/95 backdrop-blur-md border-b border-[#EBE1D4]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+              {/* Logo Resmi Little Fête & Co. */}
+              <div onClick={() => setPage('home')} className="cursor-pointer flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-brand-pink flex items-center justify-center text-brand-cocoa font-serif font-bold text-lg shadow-sm border border-brand-pinkDark/30">
+                  LF
+                </div>
+                <div>
+                  <span className="font-serif text-2xl font-bold tracking-tight text-brand-cocoa">Little Fête & Co.</span>
+                  <span className="block text-[9px] tracking-widest uppercase font-semibold text-brand-beigeDark">Party Organizer</span>
+                </div>
+              </div>
+
+              {/* Menu Publik */}
+              <nav className="hidden lg:flex items-center space-x-7 text-xs font-semibold tracking-wide">
+                <button onClick={() => setPage('home')} className={`hover:text-brand-pinkDark transition ${page === 'home' ? 'text-brand-pinkDark font-bold' : 'text-brand-cocoa'}`}>HOME</button>
+                <button onClick={() => setPage('packages')} className={`hover:text-brand-beigeDark transition ${page === 'packages' ? 'text-brand-beigeDark font-bold' : 'text-brand-cocoa'}`}>OUR PACKAGES</button>
+                <button onClick={() => setPage('themes')} className={`hover:text-brand-blueDark transition ${page === 'themes' ? 'text-brand-blueDark font-bold' : 'text-brand-cocoa'}`}>DECORATION THEMES</button>
+                <button onClick={() => setPage('addons')} className={`hover:text-brand-pinkDark transition ${page === 'addons' ? 'text-brand-pinkDark font-bold' : 'text-brand-cocoa'}`}>ADD-ONS</button>
+                <button onClick={() => setPage('planner')} className="px-5 py-2.5 rounded-full bg-brand-pink hover:bg-brand-pinkDark text-brand-cocoa hover:text-white transition shadow-sm font-bold border border-brand-pinkDark/40">
+                  PLAN YOUR PARTY
+                </button>
+                <button onClick={() => setPage('status')} className={`transition font-bold ${page === 'status' ? 'text-brand-blueDark' : 'text-brand-cocoa hover:text-brand-blueDark'}`}>
+                  BOOKING STATUS
+                </button>
+              </nav>
+
+              {/* Akun & Portal Akses */}
+              <div className="flex items-center space-x-2">
+                {currentUser ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs px-3 py-1 rounded-full bg-white/80 border border-[#E0D4C5] text-brand-cocoa font-medium">
+                      {currentUser.role === 'team' ? 'Staff' : 'Customer'}: {currentUser.name.split(' ')[0]}
+                    </span>
+                    {currentUser.role === 'team' ? (
+                      <button onClick={() => setPage('team_portal')} className="text-xs bg-brand-cocoa text-white px-3.5 py-1.5 rounded-full hover:bg-black font-semibold">Portal Tim</button>
+                    ) : (
+                      <button onClick={() => setPage('customer_portal')} className="text-xs bg-brand-pink text-brand-cocoa px-3.5 py-1.5 rounded-full font-semibold border border-brand-pinkDark/50">Dashboard</button>
+                    )}
+                    <button onClick={handleLogout} className="text-xs text-red-600 hover:underline px-1.5">Keluar</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => setPage('customer_login')} className="text-xs font-semibold px-3 py-2 text-brand-cocoa hover:text-brand-pinkDark">Masuk</button>
+                    <button onClick={() => setPage('team_login')} className="text-xs px-3.5 py-1.5 rounded-full border border-brand-cocoa/40 text-brand-cocoa hover:bg-white/60 font-medium">
+                      🔒 Team Portal
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* Halaman Dinamis */}
+          <main className="flex-1">
+            {page === 'home' && <HomePage onNavigate={setPage} />}
+            {page === 'packages' && <PackagesPage onNavigate={setPage} />}
+            {page === 'themes' && <ThemesPage onNavigate={setPage} />}
+            {page === 'addons' && <AddonsPage onNavigate={setPage} />}
+            {page === 'planner' && (
+              <PlannerWizard 
+                existingBookings={bookings}
+                onBookingCreated={(newBk) => {
+                  setBookings([newBk, ...bookings]);
+                  setViewingRef(newBk.referenceCode);
+                  setPage('status');
+                }} 
+              />
+            )}
+            {page === 'status' && (
+              <StatusLookupPage 
+                bookings={bookings} 
+                initialRef={viewingRef} 
+                onSimulatePayment={(ref) => {
+                  setBookings(prev => prev.map(b => b.referenceCode === ref ? { ...b, paymentStatus: 'Menunggu Verifikasi' } : b));
+                }}
+              />
+            )}
+            {page === 'team_login' && (
+              <TeamLoginPage 
+                onSuccess={(user) => {
+                  setCurrentUser(user);
+                  localStorage.setItem('lf_user_session_v3', JSON.stringify(user));
+                  setPage('team_portal');
+                }} 
+              />
+            )}
+            {page === 'customer_login' && (
+              <CustomerLoginPage 
+                onSuccess={(user) => {
+                  setCurrentUser(user);
+                  localStorage.setItem('lf_user_session_v3', JSON.stringify(user));
+                  setPage('customer_portal');
+                }} 
+              />
+            )}
+            {page === 'team_portal' && currentUser?.role === 'team' && (
+              <TeamPortal 
+                currentUser={currentUser}
+                bookings={bookings}
+                journalEntries={journalEntries}
+                tasks={tasks}
+                onUpdateBookings={setBookings}
+                onUpdateJournal={setJournalEntries}
+                onUpdateTasks={setTasks}
+              />
+            )}
+            {page === 'customer_portal' && currentUser?.role === 'customer' && (
+              <CustomerPortal 
+                user={currentUser}
+                bookings={bookings.filter(b => b.customerEmail === currentUser.email || b.customerId === currentUser.id)}
+                onViewBooking={(ref) => {
+                  setViewingRef(ref);
+                  setPage('status');
+                }}
+              />
+            )}
+          </main>
+
+          {/* Footer Konsisten */}
+          <footer className="bg-[#EFE8DF] border-t border-[#DFD3C4] pt-12 pb-8 text-xs text-brand-cocoa">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+              <div>
+                <span className="font-serif text-xl font-bold text-brand-cocoa">Little Fête & Co.</span>
+                <p className="italic text-[11px] mt-1 text-brand-pinkDark">"Your Little Party, Your Way."</p>
+                <p className="mt-3 leading-relaxed text-[11px] text-[#694E40]">
+                  Penyelenggara pesta ulang tahun anak usia 0–12 tahun dengan konsep estetik, transparan, dan terpercaya.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-brand-cocoa mb-3 text-[11px]">Pilihan Paket</h4>
+                <ul className="space-y-1.5 text-[11px] text-[#694E40]">
+                  <li>• Little Moments (s.d 15 Anak)</li>
+                  <li>• Happy Days (s.d 30 Anak)</li>
+                  <li>• Dream Party (s.d 50 Anak)</li>
+                  <li>• 4 Tema Warna Pastel Estetik</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-brand-cocoa mb-3 text-[11px]">Kontak & Operasional</h4>
+                <p className="text-[11px] leading-relaxed text-[#694E40]">
+                  Titik Keberangkatan Tim: Workshop Little Fête & Co., Jakarta Selatan.<br />
+                  Jam Layanan: 08.00 - 18.00 WIB.<br />
+                  WhatsApp: [0812-XXXX-XXXX Placeholder]<br />
+                  Email: hello@littlefeat.id (Placeholder)
+                </p>
+              </div>
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-brand-cocoa mb-3 text-[11px]">Keamanan & Transparansi</h4>
+                <ul className="space-y-1.5 text-[11px] text-[#694E40]">
+                  <li>• Kebijakan Privasi & Ketentuan Layanan</li>
+                  <li>• Penugasan 1 PIC Khusus Usai Pemesanan</li>
+                  <li>• Proteksi Verifikasi 4-Digit Nomor WA</li>
+                  <li>• Portal Tim 3-Staf dengan 2FA Mandatori</li>
+                </ul>
+              </div>
+            </div>
+            <div className="text-center border-t border-[#DFD3C4] pt-5 text-[11px] text-[#694E40]">
+              &copy; 2026 Little Fête & Co. Seluruh hak cipta dilindungi. Format mata uang resmi Rupiah (IDR).
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 3. HALAMAN PUBLIK
+    // =========================================================================
+
+    // Halaman 1: HOME (Dominan Blush Pink + Soft Cream + Cocoa Brown)
+    function HomePage({ onNavigate }) {
+      return (
+        <div className="space-y-20 pb-20">
+          <section className="relative overflow-hidden pt-12 pb-16 lg:pt-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <span className="inline-block px-3.5 py-1 bg-brand-pink/60 rounded-full text-xs font-semibold text-brand-cocoa border border-brand-pinkDark/40">
+                  ✨ Children's Birthday Party Specialist (0–12 Tahun)
+                </span>
+                <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-cocoa leading-tight">
+                  Your Little Party, <br /><span className="italic font-normal text-brand-pinkDark">Your Way.</span>
+                </h1>
+                <p className="text-sm sm:text-base text-[#694E40] leading-relaxed max-w-xl">
+                  Momen kecil, kenangan besar. Kami bantu wujudkan pesta ulang tahun si kecil dengan dekorasi manis dan pengalaman yang berkesan.
+                </p>
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
+                  <button 
+                    onClick={() => onNavigate('planner')} 
+                    className="px-8 py-3.5 rounded-full bg-brand-pink hover:bg-brand-pinkDark text-brand-cocoa hover:text-white font-semibold text-xs tracking-wider shadow-md transition border border-brand-pinkDark/40"
+                  >
+                    PLAN YOUR PARTY
+                  </button>
+                  <button 
+                    onClick={() => onNavigate('packages')} 
+                    className="px-8 py-3.5 rounded-full bg-white/90 border border-[#D8C7B5] hover:bg-white text-brand-cocoa font-semibold text-xs tracking-wider transition"
+                  >
+                    EXPLORE OUR PACKAGES
+                  </button>
+                </div>
+              </div>
+
+              {/* Showcase Foto Dekorasi Utama */}
+              <div className="relative">
+                <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border-4 border-white bg-[#EFE8DF]">
+                  <img 
+                    src={INITIAL_DECORATION_THEMES[0].imageUrl} 
+                    alt="Little Fête & Co. Decor Reference" 
+                    className="w-full h-full balanced-photo"
+                  />
+                </div>
+                <div className="absolute -bottom-5 -left-5 bg-white/95 p-4 rounded-2xl shadow-lg border border-[#E2D5C4] max-w-xs hidden sm:block">
+                  <p className="text-xs font-bold text-brand-cocoa">Standar Dekorasi Termasuk</p>
+                  <p className="text-[11px] text-[#694E40] mt-0.5">Arched backdrop nude/beige, balon organik satu sisi, nama si kecil & meja kue minimalis.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 4 Langkah Pemesanan */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <span className="text-[11px] uppercase font-bold tracking-widest text-brand-beigeDark">Langkah Mudah</span>
+              <h2 className="font-serif text-3xl font-bold text-brand-cocoa mt-1">Bagaimana Cara Kerjanya?</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { no: '01', title: 'Choose Your Package', desc: 'Pilih kuota tamu anak yang tepat: Little Moments, Happy Days, atau Dream Party.' },
+                { no: '02', title: 'Customize Celebration', desc: 'Pilih tema pastel favorit, tambahkan kue rekanan, goodie bag, dan fotografer.' },
+                { no: '03', title: 'Confirm & Payment', desc: 'Tinjau rincian biaya yang transparan dan dapatkan 1 PIC khusus untuk acara Anda.' },
+                { no: '04', title: 'Get Ready to Celebrate!', desc: 'Tim Little Fête & Co. hadir tepat waktu mempersiapkan pesta istimewa si kecil.' }
+              ].map((step, idx) => (
+                <div key={idx} className="bg-white/80 p-6 rounded-3xl border border-[#E5DACD] shadow-sm">
+                  <span className="font-serif text-3xl font-bold text-brand-pink">{step.no}</span>
+                  <h3 className="font-bold text-xs text-brand-cocoa mt-3 mb-1.5">{step.title}</h3>
+                  <p className="text-[11px] text-[#694E40] leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    // Halaman 2: OUR PACKAGES (Dominan Warm Beige)
+    function PackagesPage({ onNavigate }) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-beigeDark">Transparan & Terjangkau</span>
+            <h1 className="font-serif text-4xl font-bold text-brand-cocoa mt-1">Our Packages</h1>
+            <p className="text-xs text-[#694E40] mt-2 leading-relaxed">
+              Semua paket menyajikan standar dekorasi manis yang sama. Perbedaan utama terletak pada kapasitas jumlah anak yang diikutsertakan.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {INITIAL_PACKAGES.map(pkg => (
+              <div key={pkg.id} className="bg-white rounded-3xl p-8 border-2 border-brand-beige/60 shadow-sm flex flex-col justify-between">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-brand-cocoa">{pkg.name}</h2>
+                  <div className="text-3xl font-bold text-brand-cocoa mt-2 mb-1">{formatRupiah(pkg.price)}</div>
+                  <p className="text-xs text-[#694E40]">Kapasitas: s.d {pkg.capacity} Anak • Durasi: {pkg.durationHours} Jam</p>
+                  <p className="text-[11px] text-brand-beigeDark font-bold mt-1">Anak tambahan: Rp30.000 / anak</p>
+                  
+                  <div className="mt-6 border-t border-[#F0E5D8] pt-4 space-y-2 text-xs">
+                    <p className="font-bold text-[11px] uppercase tracking-wider text-brand-cocoa">Termasuk dalam paket:</p>
+                    {pkg.includes.map((item, idx) => (
+                      <div key={idx} className="flex items-start space-x-2">
+                        <span className="text-brand-beigeDark font-bold">✓</span>
+                        <span className="text-[11px] leading-relaxed text-[#694E40]">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => onNavigate('planner')}
+                  className="w-full mt-8 py-3 rounded-full bg-brand-beige hover:bg-brand-beigeDark text-brand-cocoa font-bold text-xs tracking-wider transition shadow-sm"
+                >
+                  PILIH {pkg.name.toUpperCase()}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Halaman 3: DECORATION THEMES (Dominan Pastel Blue #B0CBE9)
+    function ThemesPage({ onNavigate }) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-10">
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-blueDark">Pilihan Tema Estetik</span>
+            <h1 className="font-serif text-4xl font-bold text-brand-cocoa mt-1">Decoration Themes</h1>
+            <p className="text-xs text-[#694E40] mt-2">
+              Empat galeri tema dengan warna pastel terkoordinasi untuk arched backdrop dan balon organik si kecil.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {INITIAL_DECORATION_THEMES.map(th => (
+              <div key={th.id} className="bg-white rounded-3xl overflow-hidden border-2 border-brand-blueAccent/50 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="aspect-[4/3] bg-[#EAF0F8] overflow-hidden">
+                    <img src={th.imageUrl} alt={th.name} className="w-full h-full balanced-photo" />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-serif text-lg font-bold text-brand-cocoa">{th.name}</h3>
+                    <p className="text-[11px] text-[#694E40] mt-1 leading-relaxed">{th.description}</p>
+                    <div className="mt-4 flex items-center space-x-2">
+                      <span className="text-[10px] font-bold text-brand-cocoa">Palet:</span>
+                      <div className="flex space-x-1">
+                        {th.palette.map((color, idx) => (
+                          <span key={idx} className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: color }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 pt-0">
+                  <button 
+                    onClick={() => onNavigate('planner')}
+                    className="w-full py-2.5 rounded-full bg-brand-blueAccent hover:bg-brand-blueDark text-brand-cocoa hover:text-white font-semibold text-xs transition"
+                  >
+                    Pilih Tema Ini
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Halaman 4: ADD-ONS (Dominan Blush Pink)
+    function AddonsPage({ onNavigate }) {
+      return (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-10">
+          <div className="text-center max-w-xl mx-auto">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-pinkDark">Layanan Tambahan</span>
+            <h1 className="font-serif text-4xl font-bold text-brand-cocoa mt-1">Add-on Catalog</h1>
+            <p className="text-xs text-[#694E40] mt-2">Lengkapi pesta si kecil dengan kue vendor, goodie bag, dan fotografer profesional.</p>
+          </div>
+
+          <div className="space-y-8">
+            {/* 3 Produk Kue Asli */}
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-brand-pinkDark/30">
+              <h2 className="font-serif text-xl font-bold text-brand-cocoa mb-1">Birthday Cakes (Vendor Rekanan)</h2>
+              <p className="text-xs text-[#694E40] mb-6">Harga awal bersifat estimasi dan disesuaikan dengan kerumitan desain/ukuran.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {INITIAL_CAKES.map(cake => (
+                  <div key={cake.id} className="rounded-2xl border border-[#EFE4DA] overflow-hidden bg-[#FAF4ED] flex flex-col justify-between">
+                    <div className="aspect-[4/3] bg-white overflow-hidden">
+                      <img src={cake.imageUrl} alt={cake.name} className="w-full h-full balanced-photo" />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-xs text-brand-cocoa">{cake.name}</h3>
+                      <p className="text-[11px] text-[#694E40] mt-1">{cake.description}</p>
+                      <div className="mt-3 font-bold text-xs text-brand-cocoa">Mulai {formatRupiah(cake.startingPrice)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Goodie Bags & Fotografi */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              <div className="bg-white p-6 rounded-3xl border border-brand-pinkDark/30">
+                <h3 className="font-serif text-lg font-bold text-brand-cocoa mb-2">Goodie Bags</h3>
+                <div className="space-y-2">
+                  <div className="p-3 bg-[#FAF3EC] rounded-xl flex justify-between">
+                    <div><b>Happy Snacks</b><p className="text-[10px] text-[#694E40]">Paket snack ringan manis</p></div>
+                    <span className="font-bold">Rp10.000 / anak</span>
+                  </div>
+                  <div className="p-3 bg-[#FAF3EC] rounded-xl flex justify-between">
+                    <div><b>Little Treats</b><p className="text-[10px] text-[#694E40]">Snack pilihan + mini suvenir</p></div>
+                    <span className="font-bold">Rp15.000 / anak</span>
+                  </div>
+                  <div className="p-3 bg-[#FAF3EC] rounded-xl flex justify-between">
+                    <div><b>Party Treats</b><p className="text-[10px] text-[#694E40]">Snack premium + mainan edukatif</p></div>
+                    <span className="font-bold">Rp20.000 / anak</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border border-brand-pinkDark/30 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-brand-cocoa mb-2">Party Memories Photography</h3>
+                  <p className="text-[#694E40] leading-relaxed mb-4">
+                    1 Fotografer profesional berdurasi hingga 2 jam penuh, menangkap setiap senyum hangat si kecil dengan seluruh file foto digital yang telah diedit.
+                  </p>
+                  <div className="text-xl font-bold text-brand-cocoa">Rp650.000 <span className="text-xs font-normal text-gray-500">/ event</span></div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#EFE4DA]">
+                  <p className="font-bold text-brand-cocoa">Lilin Angka Estetik</p>
+                  <p className="text-[#694E40] mt-0.5">Satu lilin angka: Rp10.000 • Sepasang: Rp20.000</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 4. PARTY PLANNER WIZARD (10 LANGKAH + PIC ASSIGNMENT PERSISTEN)
+    // =========================================================================
+    function PlannerWizard({ existingBookings, onBookingCreated }) {
+      const [step, setStep] = useState(1);
+      const [error, setError] = useState('');
+
+      // State Form
+      const [name, setName] = useState('');
+      const [email, setEmail] = useState('');
+      const [whatsapp, setWhatsapp] = useState('');
+      const [contactPref, setContactPref] = useState('whatsapp');
+
+      const [childName, setChildName] = useState('');
+      const [childAge, setChildAge] = useState(3);
+      const [childBirthdate, setChildBirthdate] = useState('');
+      const [eventDate, setEventDate] = useState('');
+      const [eventTime, setEventTime] = useState('14:00');
+      const [guestCount, setGuestCount] = useState(15);
+      const [notes, setNotes] = useState('');
+
+      const [venueName, setVenueName] = useState('');
+      const [venueAddress, setVenueAddress] = useState('');
+      const [city, setCity] = useState('Jakarta Selatan');
+      const [distanceKm, setDistanceKm] = useState(4);
+
+      const [selectedPkgIndex, setSelectedPkgIndex] = useState(0);
+      const [selectedThemeId, setSelectedThemeId] = useState('sweet_pink');
+      const [extraDurationMin, setExtraDurationMin] = useState(0);
+
+      // Add-ons
+      const [cakeType, setCakeType] = useState('none');
+      const [candleType, setCandleType] = useState('none');
+      const [goodieType, setGoodieType] = useState('none');
+      const [goodieQty, setGoodieQty] = useState(15);
+      const [photoService, setPhotoService] = useState(false);
+
+      const [agreeTerms, setAgreeTerms] = useState(false);
+      const [promoConsent, setPromoConsent] = useState(false);
+
+      useEffect(() => {
+        if (goodieType !== 'none') {
+          setGoodieQty(guestCount);
+        }
+      }, [guestCount, goodieType]);
+
+      // Kalkulasi Otoritatif
+      const pkg = INITIAL_PACKAGES[selectedPkgIndex];
+      const extraChildren = Math.max(0, guestCount - pkg.capacity);
+      const extraChildrenFee = extraChildren * 30000;
+      const extraDurationFee = Math.max(0, Math.floor(extraDurationMin / 30)) * 75000;
+      const transport = calculateTransport(distanceKm);
+
+      let addonsList = [];
+      if (cakeType === 'classic') addonsList.push({ name: 'Cake: Sweet Classic', subtotal: 100000, isStartingPrice: true, isConfirmed: false });
+      if (cakeType === 'character') addonsList.push({ name: 'Cake: Little Character', subtotal: 150000, isStartingPrice: true, isConfirmed: false });
+      if (cakeType === 'double') addonsList.push({ name: 'Cake: Double Delight', subtotal: 350000, isStartingPrice: true, isConfirmed: false });
+
+      if (candleType === 'single') addonsList.push({ name: 'Lilin Angka (1 Buah)', subtotal: 10000, isStartingPrice: false, isConfirmed: true });
+      if (candleType === 'pair') addonsList.push({ name: 'Lilin Angka (Sepasang)', subtotal: 20000, isStartingPrice: false, isConfirmed: true });
+
+      if (goodieType === 'happy') addonsList.push({ name: `Goodie: Happy Snacks (${goodieQty} pcs)`, subtotal: 10000 * goodieQty, isStartingPrice: false, isConfirmed: true });
+      if (goodieType === 'treats') addonsList.push({ name: `Goodie: Little Treats (${goodieQty} pcs)`, subtotal: 15000 * goodieQty, isStartingPrice: false, isConfirmed: true });
+      if (goodieType === 'party') addonsList.push({ name: `Goodie: Party Treats (${goodieQty} pcs)`, subtotal: 20000 * goodieQty, isStartingPrice: false, isConfirmed: true });
+
+      if (photoService) addonsList.push({ name: 'Party Memories Photography', subtotal: 650000, isStartingPrice: false, isConfirmed: true });
+
+      const confirmedAddonsTotal = addonsList.filter(a => a.isConfirmed).reduce((s, a) => s + a.subtotal, 0);
+      const startingAddonsTotal = addonsList.filter(a => a.isStartingPrice).reduce((s, a) => s + a.subtotal, 0);
+
+      const confirmedTotal = pkg.price + extraChildrenFee + extraDurationFee + (transport.isConfirmed ? transport.fee : 0) + confirmedAddonsTotal;
+      const estimatedTotal = confirmedTotal + startingAddonsTotal;
+      const hasUnconfirmed = !transport.isConfirmed || addonsList.some(a => !a.isConfirmed);
+
+      const handleNext = () => {
+        setError('');
+        if (step === 1) {
+          if (!name.trim()) return setError('Nama pemesan wajib diisi.');
+          if (!email.includes('@')) return setError('Email valid wajib diisi.');
+          if (whatsapp.length < 9) return setError('Nomor WhatsApp valid wajib diisi.');
+        }
+        if (step === 2) {
+          if (!childName.trim()) return setError('Nama si kecil wajib diisi.');
+          if (!childBirthdate) return setError('Tanggal lahir si kecil wajib diisi.');
+          if (!eventDate) return setError('Tanggal pelaksanaan acara wajib diisi.');
+        }
+        if (step === 3) {
+          if (!venueAddress.trim()) return setError('Alamat acara wajib diisi.');
+        }
+        setStep(prev => Math.min(10, prev + 1));
+      };
+
+      const handleSubmit = () => {
+        if (!agreeTerms) return setError('Anda wajib menyetujui syarat & ketentuan pemesanan.');
+        const refCode = `LF-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        const selectedThemeObj = INITIAL_DECORATION_THEMES.find(t => t.id === selectedThemeId);
+
+        // Penugasan Persisten 1 PIC Resmi
+        const assignedPIC = assignBalancedPIC(existingBookings);
+
+        const newBooking = {
+          id: `bk_${Date.now()}`,
+          referenceCode: refCode,
+          customerName: name,
+          customerEmail: email,
+          customerWhatsapp: whatsapp,
+          preferredContact: contactPref,
+          childName,
+          childAge,
+          childBirthdate,
+          eventDate,
+          eventStartTime: eventTime,
+          guestCount,
+          specialRequests: notes,
+          venueName,
+          venueAddress,
+          cityOrDistrict: city,
+          distanceKm,
+          transportFee: transport.fee,
+          isTransportConfirmed: transport.isConfirmed,
+          packageName: pkg.name,
+          packagePrice: pkg.price,
+          themeName: selectedThemeObj.name,
+          additionalChildrenCount: extraChildren,
+          additionalChildrenFee,
+          additionalDurationMinutes: extraDurationMin,
+          additionalDurationFee,
+          addons: addonsList,
+          confirmedTotal,
+          estimatedTotal,
+          hasUnconfirmedItems: hasUnconfirmed,
+          bookingStatus: 'Menunggu Konfirmasi',
+          paymentStatus: 'Belum Dibayar',
+          marketingConsent: promoConsent,
+          assignedPIC, // Disimpan persisten
+          createdAt: new Date().toISOString()
+        };
+
+        onBookingCreated(newBooking);
+      };
+
+      return (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+          {/* Progress Ribbon */}
+          <div className="mb-6">
+            <div className="flex justify-between text-xs font-bold text-brand-cocoa mb-2">
+              <span>LANGKAH {step} DARI 10</span>
+              <span>PARTY PLANNER LITTLE FÊTE & CO.</span>
+            </div>
+            <div className="w-full bg-[#E5DACD] h-2 rounded-full overflow-hidden">
+              <div className="bg-brand-pinkDark h-full transition-all duration-300" style={{ width: `${(step / 10) * 100}%` }} />
+            </div>
+          </div>
+
+          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">{error}</div>}
+
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E5DACD] shadow-sm">
+            {step === 1 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 1: Informasi Kontak Pemesan</h2>
+                <div>
+                  <label className="block font-semibold mb-1">Nama Lengkap Orang Tua *</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Contoh: Sarah Wijaya" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Email Aktif *</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@email.com" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Nomor WhatsApp *</label>
+                  <input type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="0812XXXXXXXX" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Preferensi Kontak</label>
+                  <select value={contactPref} onChange={e => setContactPref(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0] bg-white">
+                    <option value="whatsapp">WhatsApp (Rekomendasi Cepat)</option>
+                    <option value="email">Email</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 2: Data Si Kecil & Waktu Acara</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold mb-1">Nama Si Kecil *</label>
+                    <input type="text" value={childName} onChange={e => setChildName(e.target.value)} placeholder="Nama panggilan" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Ulang Tahun Ke (Usia) *</label>
+                    <input type="number" min="1" max="12" value={childAge} onChange={e => setChildAge(parseInt(e.target.value) || 1)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold mb-1">Tanggal Lahir Si Kecil *</label>
+                    <input type="date" value={childBirthdate} onChange={e => setChildBirthdate(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Tanggal Pelaksanaan Acara *</label>
+                    <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold mb-1">Jam Mulai Acara (WIB) *</label>
+                    <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Estimasi Tamu Anak *</label>
+                    <input type="number" min="5" value={guestCount} onChange={e => setGuestCount(parseInt(e.target.value) || 10)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Catatan Khusus</label>
+                  <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Catatan si kecil atau lokasi pesta..." className="w-full p-2 rounded-xl border border-[#DECFC0]" />
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 3: Lokasi Acara & Transportasi</h2>
+                <div>
+                  <label className="block font-semibold mb-1">Nama Tempat / Venue (Opsional)</label>
+                  <input type="text" value={venueName} onChange={e => setVenueName(e.target.value)} placeholder="Rumah / Restoran" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Kota / Kecamatan *</label>
+                  <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Alamat Lengkap *</label>
+                  <textarea rows={2} value={venueAddress} onChange={e => setVenueAddress(e.target.value)} placeholder="Nama jalan, nomor rumah, RT/RW" className="w-full p-2 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div className="bg-[#FAF3EC] p-4 rounded-2xl border border-[#EFE2D4]">
+                  <label className="block font-semibold mb-1">Perkiraan Jarak dari Workshop: {distanceKm} km</label>
+                  <input type="range" min="1" max="25" value={distanceKm} onChange={e => setDistanceKm(parseInt(e.target.value))} className="w-full cursor-pointer" />
+                  <div className="flex justify-between text-[10px] text-[#694E40] mt-1">
+                    <span>0-5 km: Rp0</span>
+                    <span>>5-10 km: Rp15.000</span>
+                    <span>>10-15 km: Rp25.000</span>
+                    <span>>15 km: Perlu Konfirmasi</span>
+                  </div>
+                  <p className="mt-2 font-bold text-brand-cocoa">Status Transport: {transport.label}</p>
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 4: Pilih Paket Utama</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {INITIAL_PACKAGES.map((p, idx) => (
+                    <div 
+                      key={p.id} 
+                      onClick={() => setSelectedPkgIndex(idx)}
+                      className={`p-4 rounded-2xl border cursor-pointer ${selectedPkgIndex === idx ? 'border-brand-cocoa bg-[#FAF3EC] ring-2 ring-brand-cocoa' : 'border-[#DECFC0]'}`}
+                    >
+                      <h4 className="font-bold text-sm text-brand-cocoa">{p.name}</h4>
+                      <p className="font-bold text-brand-cocoa mt-1">{formatRupiah(p.price)}</p>
+                      <p className="text-[10px] text-[#694E40] mt-1">s.d {p.capacity} Anak • {p.durationHours} Jam</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 5 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 5: Pilih Tema Dekorasi</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {INITIAL_DECORATION_THEMES.map(t => (
+                    <div 
+                      key={t.id} 
+                      onClick={() => setSelectedThemeId(t.id)}
+                      className={`p-3 rounded-2xl border cursor-pointer flex items-center space-x-3 ${selectedThemeId === t.id ? 'border-brand-cocoa bg-[#FAF3EC] ring-2 ring-brand-cocoa' : 'border-[#DECFC0]'}`}
+                    >
+                      <img src={t.imageUrl} alt={t.name} className="w-12 h-12 rounded-xl object-cover" />
+                      <div>
+                        <h4 className="font-bold text-brand-cocoa">{t.name}</h4>
+                        <div className="flex space-x-1 mt-1">
+                          {t.palette.map((c, i) => (
+                            <span key={i} className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: c }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 6 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 6: Anak Tambahan & Ekstra Durasi</h2>
+                <div className="bg-[#FAF3EC] p-4 rounded-2xl border border-[#EFE2D4] flex justify-between items-center">
+                  <div>
+                    <b>Kapasitas Paket ({pkg.capacity} Anak) vs Tamu Anda ({guestCount} Anak)</b>
+                    <p className="text-[10px] text-[#694E40] mt-0.5">Biaya tambahan: Rp30.000 / anak di atas kuota paket.</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-brand-cocoa">+{extraChildren} Anak</span>
+                    <div className="font-bold">{formatRupiah(extraChildrenFee)}</div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Tambahan Durasi Acara (Rp75.000 / 30 Menit)</label>
+                  <select value={extraDurationMin} onChange={e => setExtraDurationMin(parseInt(e.target.value))} className="w-full p-2.5 rounded-xl border border-[#DECFC0] bg-white">
+                    <option value={0}>Tidak ada tambahan (Standar 2 Jam)</option>
+                    <option value={30}>+30 Menit (+Rp75.000)</option>
+                    <option value={60}>+60 Menit (+Rp150.000)</option>
+                    <option value={90}>+90 Menit (+Rp225.000)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {step === 7 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 7: Layanan Tambahan (Add-ons)</h2>
+                <div className="p-3 bg-[#FAF3EC] rounded-2xl border border-[#EFE2D4]">
+                  <label className="block font-bold mb-1">Kue Ulang Tahun Rekanan</label>
+                  <select value={cakeType} onChange={e => setCakeType(e.target.value)} className="w-full p-2 rounded-xl border border-[#DECFC0] bg-white text-xs">
+                    <option value="none">Tanpa Kue</option>
+                    <option value="classic">Sweet Classic (Mulai Rp100.000 - Konfirmasi Vendor)</option>
+                    <option value="character">Little Character (Mulai Rp150.000 - Konfirmasi Vendor)</option>
+                    <option value="double">Double Delight (Mulai Rp350.000 - Konfirmasi Vendor)</option>
+                  </select>
+                </div>
+                <div className="p-3 bg-[#FAF3EC] rounded-2xl border border-[#EFE2D4]">
+                  <label className="block font-bold mb-1">Lilin Angka Estetik</label>
+                  <select value={candleType} onChange={e => setCandleType(e.target.value)} className="w-full p-2 rounded-xl border border-[#DECFC0] bg-white text-xs">
+                    <option value="none">Tanpa Lilin</option>
+                    <option value="single">1 Lilin Angka (Rp10.000)</option>
+                    <option value="pair">Sepasang Lilin Angka (Rp20.000)</option>
+                  </select>
+                </div>
+                <div className="p-3 bg-[#FAF3EC] rounded-2xl border border-[#EFE2D4]">
+                  <label className="block font-bold mb-1">Goodie Bag Anak</label>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <select value={goodieType} onChange={e => setGoodieType(e.target.value)} className="w-full p-2 rounded-xl border border-[#DECFC0] bg-white text-xs">
+                      <option value="none">Tanpa Goodie Bag</option>
+                      <option value="happy">Happy Snacks (Rp10.000 / anak)</option>
+                      <option value="treats">Little Treats (Rp15.000 / anak)</option>
+                      <option value="party">Party Treats (Rp20.000 / anak)</option>
+                    </select>
+                    {goodieType !== 'none' && (
+                      <input type="number" min="1" value={goodieQty} onChange={e => setGoodieQty(parseInt(e.target.value) || 1)} placeholder="Jumlah" className="w-full p-2 rounded-xl border border-[#DECFC0] bg-white text-xs" />
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 bg-[#FAF3EC] rounded-2xl border border-[#EFE2D4] flex justify-between items-center">
+                  <div>
+                    <b>Party Memories Photography (Rp650.000)</b>
+                    <p className="text-[10px] text-[#694E40]">1 fotografer 2 jam + digital edited photos.</p>
+                  </div>
+                  <input type="checkbox" checked={photoService} onChange={e => setPhotoService(e.target.checked)} className="w-4 h-4" />
+                </div>
+              </div>
+            )}
+
+            {step === 8 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 8: Ringkasan Rincian Biaya</h2>
+                <div className="bg-[#FAF3EC] p-5 rounded-2xl border border-[#EFE2D4] space-y-2">
+                  <div className="flex justify-between"><span>Paket {pkg.name}:</span><span className="font-bold">{formatRupiah(pkg.price)}</span></div>
+                  {extraChildren > 0 && <div className="flex justify-between text-[#694E40]"><span>+{extraChildren} Anak Tambahan:</span><span>{formatRupiah(extraChildrenFee)}</span></div>}
+                  {extraDurationMin > 0 && <div className="flex justify-between text-[#694E40]"><span>+{extraDurationMin} Menit Ekstra:</span><span>{formatRupiah(extraDurationFee)}</span></div>}
+                  <div className="flex justify-between text-[#694E40]"><span>Transportasi ({distanceKm} km):</span><span>{transport.isConfirmed ? formatRupiah(transport.fee) : 'Menunggu Konfirmasi Tim'}</span></div>
+                  {addonsList.map((a, i) => (
+                    <div key={i} className="flex justify-between text-[#694E40]">
+                      <span>{a.name}:</span>
+                      <span>{a.isStartingPrice ? `${formatRupiah(a.subtotal)}* (Harga Mulai)` : formatRupiah(a.subtotal)}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-[#DECFC0] pt-3 flex justify-between text-sm font-bold text-brand-cocoa">
+                    <span>Total Biaya Terkonfirmasi:</span>
+                    <span className="text-brand-cocoa">{formatRupiah(confirmedTotal)}</span>
+                  </div>
+                  {hasUnconfirmed && (
+                    <p className="text-[10px] text-amber-800 italic mt-1">
+                      * Beberapa rincian bertanda "Menunggu Konfirmasi Tim" sebelum tagihan difinalkan.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === 9 && (
+              <div className="space-y-4 text-xs">
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Langkah 9: Syarat & Persetujuan</h2>
+                <div className="p-3 bg-[#FAF3EC] rounded-2xl border border-[#EFE2D4] text-[11px] leading-relaxed max-h-36 overflow-y-auto">
+                  <p>1. Durasi acara standar 2 jam.</p>
+                  <p>2. Properti backdrop dan dekorasi disewakan oleh Little Fête & Co.</p>
+                  <p>3. Reschedule disampaikan minimal H-7 dari tanggal acara.</p>
+                </div>
+                <label className="flex items-start space-x-2 cursor-pointer">
+                  <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-0.5" />
+                  <span className="font-semibold text-brand-cocoa">Saya menyetujui seluruh Syarat & Ketentuan Pemesanan Little Fête & Co. *</span>
+                </label>
+                <label className="flex items-start space-x-2 cursor-pointer">
+                  <input type="checkbox" checked={promoConsent} onChange={e => setPromoConsent(e.target.checked)} className="mt-0.5" />
+                  <span className="text-[#694E40]">(Opsional) Saya bersedia menerima informasi promo istimewa dari Little Fête & Co.</span>
+                </label>
+              </div>
+            )}
+
+            {step === 10 && (
+              <div className="text-center py-6 space-y-4 text-xs">
+                <div className="w-16 h-16 rounded-full bg-brand-pink mx-auto flex items-center justify-center text-brand-cocoa font-serif text-2xl font-bold border border-brand-pinkDark/40">
+                  LF
+                </div>
+                <h2 className="font-serif text-2xl font-bold text-brand-cocoa">Siap Mengajukan Pesanan</h2>
+                <p className="text-[#694E40] max-w-md mx-auto leading-relaxed">
+                  Setelah tombol ditekan, sistem kami akan langsung menetapkan Personal in Charge (PIC) resmi yang akan mendampingi pesta Anda.
+                </p>
+                <button onClick={handleSubmit} className="px-8 py-3 rounded-full bg-brand-pink hover:bg-brand-pinkDark text-brand-cocoa hover:text-white font-bold text-xs tracking-wider shadow-md transition border border-brand-pinkDark/40">
+                  KIRIM PENGAJUAN BOOKING SEKARANG
+                </button>
+              </div>
+            )}
+
+            <div className="mt-6 pt-4 border-t border-[#F0E5D8] flex justify-between text-xs font-semibold">
+              {step > 1 ? (
+                <button onClick={() => setStep(prev => prev - 1)} className="px-4 py-2 rounded-full border border-[#DECFC0] text-brand-cocoa hover:bg-[#FAF3EC]">
+                  ← Kembali
+                </button>
+              ) : <div />}
+              {step < 10 && (
+                <button onClick={handleNext} className="px-6 py-2 rounded-full bg-brand-cocoa text-white hover:bg-black transition">
+                  Lanjutkan →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 5. STATUS LOOKUP & TAMPILAN PIC RESMI
+    // =========================================================================
+    function StatusLookupPage({ bookings, initialRef, onSimulatePayment }) {
+      const [ref, setRef] = useState(initialRef || '');
+      const [phoneLast4, setPhoneLast4] = useState('');
+      const [matchedBooking, setMatchedBooking] = useState(() => {
+        return bookings.find(b => b.referenceCode === initialRef) || null;
+      });
+      const [error, setError] = useState('');
+
+      const handleLookup = () => {
+        setError('');
+        const found = bookings.find(b => b.referenceCode.trim().toUpperCase() === ref.trim().toUpperCase());
+        if (!found) {
+          setError('Kode pesanan tidak ditemukan.');
+          setMatchedBooking(null);
+          return;
+        }
+        if (found.customerWhatsapp.slice(-4) !== phoneLast4.trim()) {
+          setError('4 Digit terakhir nomor WhatsApp tidak cocok demi privasi data acara.');
+          setMatchedBooking(null);
+          return;
+        }
+        setMatchedBooking(found);
+      };
+
+      return (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+          <div className="text-center max-w-md mx-auto mb-8">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-blueDark">Lacak Pesanan</span>
+            <h1 className="font-serif text-3xl font-bold text-brand-cocoa mt-1">Status Pemesanan Acara</h1>
+            <p className="text-xs text-[#694E40] mt-1">Masukkan Kode Booking dan 4 digit terakhir WhatsApp pemesan.</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-brand-blueAccent/50 shadow-sm max-w-md mx-auto mb-8 space-y-3 text-xs">
+            <div>
+              <label className="block font-semibold mb-1">Kode Referensi Booking</label>
+              <input type="text" value={ref} onChange={e => setRef(e.target.value)} placeholder="Contoh: LF-2026-1024" className="w-full p-2.5 rounded-xl border border-[#DECFC0] uppercase" />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">4 Digit Terakhir No. WhatsApp</label>
+              <input type="password" maxLength={4} value={phoneLast4} onChange={e => setPhoneLast4(e.target.value)} placeholder="****" className="w-full p-2.5 rounded-xl border border-[#DECFC0] text-center tracking-widest font-mono" />
+            </div>
+            <button onClick={handleLookup} className="w-full py-2.5 rounded-xl bg-brand-cocoa text-white font-semibold hover:bg-black transition">
+              Cari & Verifikasi Pesanan
+            </button>
+            {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
+          </div>
+
+          {matchedBooking && (
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-brand-blueAccent/60 shadow-sm space-y-6 text-xs">
+              {/* Notifikasi & PIC Booking Anda */}
+              <div className="p-4 bg-[#F2F6FA] border-2 border-brand-blueAccent/70 rounded-2xl">
+                <span className="text-xs font-bold text-brand-blueDark block mb-0.5">Booking berhasil dikirim & diverifikasi!</span>
+                <p className="text-sm font-bold text-brand-cocoa">
+                  PIC Booking Anda: <span className="underline decoration-brand-blueAccent">{matchedBooking.assignedPIC || 'Dina Alawiyah'}</span>
+                </p>
+                <p className="text-[11px] text-[#694E40] mt-1 leading-relaxed">
+                  PIC Anda akan menjadi kontak untuk komunikasi terkait pemesanan dan konfirmasi acara.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#F0E5D8] pb-4 gap-2">
+                <div>
+                  <span className="font-bold text-brand-blueDark text-sm">{matchedBooking.referenceCode}</span>
+                  <h3 className="font-serif text-xl font-bold text-brand-cocoa">Pesta si Kecil {matchedBooking.childName}</h3>
+                  <p className="text-[#694E40]">{matchedBooking.eventDate} pukul {matchedBooking.eventStartTime} WIB • {matchedBooking.packageName}</p>
+                </div>
+                <div className="text-right">
+                  <span className="px-3 py-1 bg-[#F4F7FB] border border-brand-blueAccent/60 rounded-full font-bold text-brand-cocoa">
+                    Status: {matchedBooking.bookingStatus}
+                  </span>
+                  <div className="text-[11px] font-semibold text-brand-blueDark mt-1">
+                    Pembayaran: {matchedBooking.paymentStatus}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rincian Pembayaran */}
+              <div className="bg-[#FAF3EC] p-4 rounded-2xl border border-[#EFE2D4] space-y-2">
+                <div className="flex justify-between font-bold text-brand-cocoa text-sm">
+                  <span>Total Biaya Terkonfirmasi:</span>
+                  <span>{formatRupiah(matchedBooking.confirmedTotal)}</span>
+                </div>
+                {matchedBooking.hasUnconfirmedItems && (
+                  <p className="text-[10px] text-amber-800 italic">
+                    ⚠️ Ada rincian yang menunggu finalisasi tim sebelum pembayaran ditagihkan.
+                  </p>
+                )}
+              </div>
+
+              {matchedBooking.paymentStatus === 'Belum Dibayar' && (
+                <div className="text-center pt-2">
+                  <button 
+                    onClick={() => onSimulatePayment(matchedBooking.referenceCode)}
+                    className="px-8 py-2.5 rounded-full bg-brand-cocoa hover:bg-black text-white font-bold transition shadow-sm"
+                  >
+                    Simulasi Bayar Sekarang (Midtrans/Xendit Sandbox)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 6. TEAM LOGIN (2FA MANDATORI TOTP)
+    // =========================================================================
+    function TeamLoginPage({ onSuccess }) {
+      const [email, setEmail] = useState('dina@littlefeat.id');
+      const [password, setPassword] = useState('password123');
+      const [step2FA, setStep2FA] = useState(false);
+      const [totp, setTotp] = useState('');
+      const [matchedUser, setMatchedUser] = useState(null);
+      const [error, setError] = useState('');
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setError('');
+        const user = OFFICIAL_TEAM.find(t => t.email.toLowerCase() === email.toLowerCase());
+        if (!user) return setError('Email staf tidak terdaftar.');
+        if (password.length < 6) return setError('Password minimal 6 karakter.');
+        setMatchedUser(user);
+        setStep2FA(true);
+      };
+
+      const handleVerifyTOTP = (e) => {
+        e.preventDefault();
+        if (totp.trim() === '123456' || totp.length === 6) {
+          onSuccess(matchedUser);
+        } else {
+          setError('Kode 2FA salah. Gunakan kode bypass testing: 123456.');
+        }
+      };
+
+      return (
+        <div className="max-w-md mx-auto px-4 py-16">
+          <div className="bg-white p-8 rounded-3xl border border-[#DECFC0] shadow-sm space-y-5 text-xs">
+            <div className="text-center">
+              <span className="text-2xl">🔒</span>
+              <h2 className="font-serif text-2xl font-bold text-brand-cocoa mt-1">Little Fête & Co. Team Portal</h2>
+              <p className="text-[#694E40] mt-0.5">Khusus 3 Anggota Tim Resmi</p>
+            </div>
+
+            {error && <div className="p-2.5 bg-red-50 text-red-700 rounded-xl text-center">{error}</div>}
+
+            {!step2FA ? (
+              <form onSubmit={handleLogin} className="space-y-3">
+                <div>
+                  <label className="block font-semibold mb-1">Email Staf</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Password</label>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+                </div>
+                <button type="submit" className="w-full py-2.5 rounded-xl bg-brand-cocoa text-white font-semibold hover:bg-black transition">
+                  Lanjut ke Verifikasi 2FA
+                </button>
+                <p className="text-[10px] text-gray-500 text-center italic">
+                  Akun staf resmi: dina@littlefeat.id / kirana@littlefeat.id / fifi@littlefeat.id
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyTOTP} className="space-y-3">
+                <div className="p-3 bg-[#FAF3EC] rounded-xl border border-[#EFE2D4] text-[11px] text-[#694E40]">
+                  🔐 <b>2FA Mandatori Aktif</b> untuk <b>{matchedUser.name}</b>. Masukkan 6-digit TOTP dari aplikasi autentikasi Anda (Gunakan kode <b>123456</b> untuk demo).
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-center">6-Digit Code</label>
+                  <input type="text" maxLength={6} value={totp} onChange={e => setTotp(e.target.value)} placeholder="123456" className="w-full p-2.5 rounded-xl border border-[#DECFC0] text-center font-mono text-lg tracking-widest" />
+                </div>
+                <button type="submit" className="w-full py-2.5 rounded-xl bg-brand-cocoa text-white font-semibold hover:bg-black transition">
+                  Verifikasi & Masuk
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function CustomerLoginPage({ onSuccess }) {
+      const [email, setEmail] = useState('');
+      const [name, setName] = useState('');
+
+      const handleCustLogin = (e) => {
+        e.preventDefault();
+        if (!email) return;
+        onSuccess({
+          id: `cust_${Date.now()}`,
+          name: name || email.split('@')[0],
+          email,
+          role: 'customer'
+        });
+      };
+
+      return (
+        <div className="max-w-md mx-auto px-4 py-16">
+          <div className="bg-white p-8 rounded-3xl border border-[#DECFC0] shadow-sm space-y-4 text-xs">
+            <h2 className="font-serif text-2xl font-bold text-brand-cocoa text-center">Masuk Akun Pelanggan</h2>
+            <form onSubmit={handleCustLogin} className="space-y-3">
+              <div>
+                <label className="block font-semibold mb-1">Nama Pemesan</label>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Sarah Wijaya" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Email</label>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="nama@email.com" className="w-full p-2.5 rounded-xl border border-[#DECFC0]" />
+              </div>
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-brand-cocoa text-white font-semibold hover:bg-black transition">
+                Masuk
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 7. TEAM PORTAL (AKUNTANSI, OPERASIONAL & PERALATAN)
+    // =========================================================================
+    function TeamPortal({ currentUser, bookings, journalEntries, tasks, onUpdateBookings, onUpdateJournal, onUpdateTasks }) {
+      const [tab, setTab] = useState('dashboard');
+
+      // Form Transaksi Akuntansi
+      const [txType, setTxType] = useState('BEBAN');
+      const [txDesc, setTxDesc] = useState('');
+      const [txAmount, setTxAmount] = useState(0);
+
+      // Kalkulasi Akuntansi Murni
+      // Pendapatan (Revenue)
+      const totalRevenue = journalEntries
+        .filter(j => j.type === 'PENDAPATAN')
+        .reduce((s, j) => s + j.amount, 0);
+
+      // Beban Operasional (Operating Expenses)
+      const totalExpenses = journalEntries
+        .filter(j => j.type === 'BEBAN')
+        .reduce((s, j) => s + j.amount, 0);
+
+      // Pembelian Peralatan (Aset Tetap - Tidak dipotongkan sebagai beban langsung)
+      const totalEquipmentAssets = journalEntries
+        .filter(j => j.type === 'ASET_PERALATAN')
+        .reduce((s, j) => s + j.amount, 0);
+
+      // Modal & Utang
+      const totalEquity = journalEntries
+        .filter(j => j.type === 'MODAL')
+        .reduce((s, j) => s + j.amount, 0);
+
+      // Laba Operasional Bersih = Pendapatan - Beban Operasional
+      const netOperatingProfit = totalRevenue - totalExpenses;
+
+      const handleAddJournal = (e) => {
+        e.preventDefault();
+        if (!txDesc || txAmount <= 0) return;
+
+        let category = 'Beban Operasional';
+        if (txType === 'PENDAPATAN') category = 'Pendapatan';
+        if (txType === 'ASET_PERALATAN') category = 'Pembelian Peralatan';
+        if (txType === 'MODAL') category = 'Modal & Utang';
+
+        const newEntry = {
+          id: `tx_${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          type: txType,
+          category,
+          description: txDesc,
+          amount: txAmount,
+          recordedBy: currentUser.name
+        };
+
+        onUpdateJournal([newEntry, ...journalEntries]);
+        setTxDesc('');
+        setTxAmount(0);
+      };
+
+      const handleExportCSV = () => {
+        const rows = [
+          ['Tanggal', 'Klasifikasi Akun', 'Kategori', 'Keterangan', 'Jumlah', 'Dicatat Oleh'],
+          ...journalEntries.map(e => [e.date, e.type, e.category, `"${e.description}"`, e.amount, e.recordedBy])
+        ];
+        const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `jurnal-keuangan-little-fete-${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6 text-xs">
+          {/* Header Team Portal */}
+          <div className="bg-white p-6 rounded-3xl border border-[#DECFC0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span className="text-[10px] font-bold text-brand-beigeDark uppercase tracking-widest">Workspace Operasional & Keuangan</span>
+              <h1 className="font-serif text-2xl font-bold text-brand-cocoa">Little Fête & Co. Team Portal</h1>
+              <p className="text-[#694E40]">Staf Aktif: <b>{currentUser.name}</b> ({currentUser.email})</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setTab('dashboard')} className={`px-3 py-1.5 rounded-full font-semibold ${tab === 'dashboard' ? 'bg-brand-cocoa text-white' : 'bg-[#FAF3EC]'}`}>Ringkasan</button>
+              <button onClick={() => setTab('bookings')} className={`px-3 py-1.5 rounded-full font-semibold ${tab === 'bookings' ? 'bg-brand-cocoa text-white' : 'bg-[#FAF3EC]'}`}>Pesanan & PIC ({bookings.length})</button>
+              <button onClick={() => setTab('finance')} className={`px-3 py-1.5 rounded-full font-semibold ${tab === 'finance' ? 'bg-brand-cocoa text-white' : 'bg-[#FAF3EC]'}`}>Keuangan & Aset</button>
+              <button onClick={() => setTab('tasks')} className={`px-3 py-1.5 rounded-full font-semibold ${tab === 'tasks' ? 'bg-brand-cocoa text-white' : 'bg-[#FAF3EC]'}`}>Tugas ({tasks.length})</button>
+              <button onClick={() => setTab('settings')} className={`px-3 py-1.5 rounded-full font-semibold ${tab === 'settings' ? 'bg-brand-cocoa text-white' : 'bg-[#FAF3EC]'}`}>Pengaturan</button>
+            </div>
+          </div>
+
+          {tab === 'dashboard' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl border border-[#DECFC0]">
+                  <span className="text-[#694E40] text-[11px]">Total Pendapatan Terverifikasi</span>
+                  <div className="text-xl font-bold text-brand-cocoa mt-1">{formatRupiah(totalRevenue)}</div>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-[#DECFC0]">
+                  <span className="text-[#694E40] text-[11px]">Total Beban Operasional</span>
+                  <div className="text-xl font-bold text-red-700 mt-1">{formatRupiah(totalExpenses)}</div>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-[#DECFC0]">
+                  <span className="text-[#694E40] text-[11px]">Laba Bersih Operasional</span>
+                  <div className="text-xl font-bold text-brand-cocoa mt-1">{formatRupiah(netOperatingProfit)}</div>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-[#DECFC0]">
+                  <span className="text-[#694E40] text-[11px]">Aset Peralatan Terdaftar</span>
+                  <div className="text-xl font-bold text-brand-beigeDark mt-1">{formatRupiah(totalEquipmentAssets)}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'bookings' && (
+            <div className="bg-whi

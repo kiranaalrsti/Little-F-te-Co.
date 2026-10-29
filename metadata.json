@@ -1,0 +1,6 @@
+{
+  "name": "Little Fête & Co. — Your Little Party, Your Way",
+  "description": "Penyelenggara pesta ulang tahun anak usia 0–12 tahun dengan konsep estetik, transparan, dan terpercaya.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
